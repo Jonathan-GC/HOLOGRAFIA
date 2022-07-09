@@ -1,0 +1,157 @@
+#include <Adafruit_NeoPixel.h>
+#include <avr/power.h> // Required for 16 MHz Adafruit Trinket
+#define PIN       A2
+#define NUMPIXELS 18
+#define AnguloDesfase 180
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+
+
+
+
+volatile bool sensor =0;
+volatile bool listo_texto=0;  
+volatile int contador =0;
+volatile bool antr =1;
+
+volatile unsigned long tiempoActual= 0;
+volatile unsigned long tiempoAnterior= 0;
+volatile unsigned long tiempoRotacion = 0;
+
+volatile unsigned long tiempoAngulo = 0;
+volatile unsigned long tiempoAngAnterior = 0;
+volatile unsigned long tiempoTrancurrido = 0;
+volatile byte contVuelta = 0;
+volatile byte pasos = 0;
+
+float duracionPORgrado=0;  
+float retardo_t=0;
+
+short anguloDeInicio[5]={0, 120, 180, 300};
+byte index = 0;
+
+float gradoRequerido = 0, gradoRequerido2 = 0, gradoRequerido3 = 0, gradoRequerido1 = 0;
+void setup() {
+ Serial.begin(9600);
+  pixels.begin();
+  attachInterrupt(digitalPinToInterrupt(2), leerPin, RISING);
+
+  pixels.setBrightness(50);
+}
+
+
+byte flag = 0;
+void loop() {
+  pixels.clear();
+  tiempoAngulo = micros();
+  tiempoTrancurrido = tiempoAngulo - tiempoAngAnterior;
+  
+  
+  //if(tiempoTrancurrido > duracionPORgrado*anguloDeInicio[pasos+1] and tiempoTrancurrido < duracionPORgrado*(anguloDeInicio[pasos+1]+5)  and listo_texto){
+  if(tiempoTrancurrido > duracionPORgrado*0 and tiempoTrancurrido < duracionPORgrado*60  and listo_texto){
+    endender();
+    //delayMicroseconds(retardo_t);
+  }
+  //else if(tiempoTrancurrido > duracionPORgrado*(AnguloDesfase+anguloDeInicio[pasos]) and tiempoTrancurrido < duracionPORgrado*(AnguloDesfase+anguloDeInicio[pasos]+5)  and listo_texto){
+  else if(tiempoTrancurrido > duracionPORgrado*60 and tiempoTrancurrido < duracionPORgrado*(120)  and listo_texto){
+    endender2();
+    //delayMicroseconds(retardo_t);
+  }
+  else if(tiempoTrancurrido > duracionPORgrado*120 and tiempoTrancurrido < duracionPORgrado*(180)  and listo_texto){
+    endender();
+    //delayMicroseconds(retardo_t);
+  }
+  else if(tiempoTrancurrido > duracionPORgrado*180 and tiempoTrancurrido < duracionPORgrado*(240)  and listo_texto){
+    endender2();
+    //delayMicroseconds(retardo_t);
+  }
+  else if(tiempoTrancurrido > duracionPORgrado*240 and tiempoTrancurrido < duracionPORgrado*(300)  and listo_texto){
+    endender();
+    //delayMicroseconds(retardo_t);
+  }
+  else if(tiempoTrancurrido > duracionPORgrado*300 and tiempoTrancurrido < duracionPORgrado*(360)  and listo_texto){
+    //endender2();
+    delayMicroseconds(retardo_t);
+    listo_texto=0;
+  }
+  else{
+    pixels.show();
+  }
+  
+//
+// if (antr==0 and sensor==1){
+//  contador = contador +1;
+//  antr=1;
+//  tiempoAnterior = tiempoActual;
+//  tiempoActual = micros();
+//  tiempoVuelta =  tiempoActual - tiempoAnterior;
+//
+//  gradoRequerido = tiempoVuelta * 0.25;
+//  gradoRequerido1 = tiempoVuelta * 0.5;
+//  gradoRequerido2 = tiempoVuelta * 0.75;
+//  gradoRequerido3 = tiempoVuelta * 0.99;
+//  flag = 1;
+// }
+
+//  if(micros() - tiempoActual > gradoRequerido && flag == 1){
+//    endender();
+//    flag=2;
+//    
+//  }
+//  else if(micros() - tiempoActual > gradoRequerido1 && flag==2){
+//    endender();
+//    flag=3;
+//    
+//  }
+//  else if(micros() - tiempoActual > gradoRequerido2 && flag==3){
+//    endender();
+//    flag=4;
+//    
+//  }
+//  else if(micros() - tiempoActual > gradoRequerido3 && flag==4){
+//    endender();
+//    flag=0;
+//  }
+//  pixels.clear();
+//  pixels.show();    
+  
+
+}
+
+
+void endender(){
+  byte r = random(255);
+  byte g = random(255);
+  byte b = random(255);
+  for(byte i = 0; i < 9; i++ ) 
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+
+  pixels.show();
+}
+
+void endender2(){
+  byte r = random(255);
+  byte g = random(255);
+  byte b = random(255);
+  for(byte i = 9; i < 18; i++ ) 
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+
+  pixels.show();
+}
+
+void leerPin(){
+   tiempoActual = micros();
+   sensor=digitalRead(2);
+   if(sensor == 1 and antr==0){
+    antr=1;
+    tiempoAnterior = tiempoActual;
+   }
+   else if(antr == 1){
+     antr = 0;
+     tiempoRotacion = tiempoActual - tiempoAnterior;
+     duracionPORgrado = tiempoRotacion/360;
+     
+     tiempoAngAnterior= micros();
+     listo_texto = 1;
+   }
+}
